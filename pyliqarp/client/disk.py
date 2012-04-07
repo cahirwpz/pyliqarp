@@ -1,21 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from types import *
-from array import *
+from array import array
 from collections import namedtuple
-from itertools import izip
 from functools import partial
-from UserList import UserList
+from itertools import izip
 
-import struct
-import os
 import mmap
+import os
 import stat
 import struct
+import struct
 
 
-class DerivedWord(namedtuple('DerivedWord', 'base tags')):
+class Tagging(namedtuple('Tagging', 'base tags')):
     """Klasa pomocnicza przechowująca otagowanie i formę bazową.
 
     Potrzebna kiedy słowo nie daje się jednoznacznie otagować i występuje w
@@ -23,63 +21,32 @@ class DerivedWord(namedtuple('DerivedWord', 'base tags')):
     """
     __slots__ = ()
 
-    @classmethod
-    def Create(cls, base, tags):
-        return cls(base, frozenset(tags.split(':')))
-
-    def __contains__(self, tag):
-        return (tag in self.tags)
-
     def pretty(self):
-        return "[\033[1;37m%s\033[0m|\033[1;33m%s\033[0m]" % (self.base, ':'.join(sorted(self.tags)))
+        return "[\033[1;37m%s\033[0m|\033[1;33m%s\033[0m]" % (self.base, ':'.join(self.tags))
 
 
-class PoliqarpWord(object):
+class Word(namedtuple('Word', 'orth baseforms')):
     """ Klasa przechowująca słowo wraz z jego wszystkimi niejednoznacznymi
     otagowaniami.
 
-    @field orth 		- słowo
-    @field base 		- pierwotna forma bazowa
-    @field tags 		- pierwotne otagowanie
-    @field baseforms	- lista PoliqarpWord.Ambiguation
+    @field orth: słowo
+    @field baseforms: lista wszystkich możliwych otagowań
+    @field base: pierwotna forma bazowa
+    @field tags: pierwotne otagowanie
 
     @method pretty		- wydrukowanie z kolorkami
     """
 
-    def __init__(self, orth, baseforms):
-        """
-        @param orth 		- słowo
-        @param baseforms	- lista par (forma bazowa, tagi)
-        """
-        assert (type(orth) is StringType) and orth
-
-        self.__baseforms = [DerivedWord.Create(base, tags) for base, tags in baseforms]
-        self.__orth		 = orth
-
-    @property
-    def orth(self):
-        return self.__orth
-
     @property
     def base(self):
-        return self.__baseforms[0].base
+        return self.baseforms[0].base
 
     @property
     def tags(self):
-        return self.__baseforms[0].tags
-
-    @property
-    def baseforms(self):
-        return self.__baseforms
-
-    def __contains__(self, tag):
-        return (tag in self.tags)
-
-    def __str__(self):
-        return "%s %s" % (self.orth, self.__baseforms[0])
+        return self.baseforms[0].tags
 
     def pretty(self):
-        return "\033[1;31m%s\033[0m %s" % (self.orth, self.__baseforms[0].pretty())
+        return "\033[1;31m%s\033[0m %s" % (self.orth, self.baseforms[0].pretty())
 
 
 def ReadPoliqarpDict(parser, prefix, name):
@@ -125,6 +92,11 @@ def PoliqarpSimpleDict(image, i, n):
     return image[i: (i+n-1)]
 
 
+def PoliqarpTagsDict(image, i, n):
+    """Parses single record of tags dictionary."""
+    return tuple(image[i: (i+n-1)].split(':'))
+
+
 def PoliqarpSubposDict(image, i, n):
     """Parses single record of subpos dictionary."""
     record = array('i', struct.unpack("H" * (n >> 1), image[i: (i+n)]))
@@ -134,12 +106,13 @@ def PoliqarpSubposDict(image, i, n):
 
 
 ReadPoliqarpSimpleDict = partial(ReadPoliqarpDict, PoliqarpSimpleDict)
+ReadPoliqarpTagsDict = partial(ReadPoliqarpDict, PoliqarpTagsDict)
 ReadPoliqarpSubposDict = partial(ReadPoliqarpDict, PoliqarpSubposDict)
 
 
 def PoliqarpBaseFormDict(base_dict, tag_dict, subpos_dict):
     def UnfoldRecord(subpos):
-        return [(base_dict[i1], tag_dict[i2]) for i1, i2 in subpos]
+        return [Tagging(base_dict[i1], tag_dict[i2]) for i1, i2 in subpos]
 
     return map(UnfoldRecord, subpos_dict)
 
@@ -164,7 +137,7 @@ class PoliqarpCorpus(object):
         self.orth_dict = ReadPoliqarpSimpleDict(prefix, "orth") 
         self.baseform_dict = PoliqarpBaseFormDict(
                 ReadPoliqarpSimpleDict(prefix, "base1"),
-                ReadPoliqarpSimpleDict(prefix, "tag"),
+                ReadPoliqarpTagsDict(prefix, "tag"),
                 ReadPoliqarpSubposDict(prefix, "subpos1"))
 
         size = os.stat(path)[stat.ST_SIZE]
@@ -202,4 +175,4 @@ class PoliqarpCorpus(object):
         bi = int((n >> 22) & 0x1FFFFF)
         ci = int((n >> 43) & 0x1FFFFF)
 
-        return PoliqarpWord(self.orth_dict[ai], self.baseform_dict[bi])
+        return Word(self.orth_dict[ai], self.baseform_dict[bi])
