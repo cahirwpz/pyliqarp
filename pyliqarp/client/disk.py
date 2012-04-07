@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from array import array
+from collections import Sequence
 from functools import partial
 from itertools import izip
 
@@ -82,7 +83,7 @@ def PoliqarpBaseFormDict(base_dict, tag_dict, subpos_dict):
     return map(UnfoldRecord, subpos_dict)
 
 
-class PoliqarpCorpus(object):
+class PoliqarpCorpus(Sequence):
     """ Właściwa klasa implementująca słownik korpusu.
     
     Implementuje interator i operator indeksowania (można odczytywać
@@ -101,15 +102,13 @@ class PoliqarpCorpus(object):
                 ReadPoliqarpSubposDict(prefix, "subpos1"))
 
         self.corpus_dict = ReadImageFile(prefix, 'corpus')
-        self.corpus_size = self.corpus_dict.size() >> 3
 
-        # podsumowanie
-        print "PoliqarpCorpus:", str(len(self)), "words in corpus."
+        print "PoliqarpCorpus: %s words in corpus." % len(self)
 
     def __len__(self):
-        return self.corpus_size
+        return self.corpus_dict.size() >> 3
 
-    def __getitem__(self, key):
+    def __getitem__(self, i):
         if type(key) is not IntType:
             raise TypeError
         if key < 0 or key >= len(self):
@@ -118,7 +117,7 @@ class PoliqarpCorpus(object):
         return self.__get_item_at(key)
 
     def __iter__(self):
-        for i in range(len(self)):
+        for i in xrange(len(self)):
             yield self.__get_item_at(i)
 
     def __get_item_at(self, key):
