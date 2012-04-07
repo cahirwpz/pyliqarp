@@ -46,7 +46,8 @@ def ReadImageFile(prefix, name):
 
     with open(path) as f:
         fd = f.fileno()
-        image = mmap.mmap(fd, os.fstat(fd)[stat.ST_SIZE], mmap.MAP_PRIVATE)
+        size = os.fstat(fd)[stat.ST_SIZE]
+        image = mmap.mmap(fd, size, mmap.MAP_PRIVATE)
 
     return image
 
@@ -92,11 +93,6 @@ class PoliqarpCorpus(object):
         """
           @param prefix	- prefiks określający ścieżkę do słownika.
         """
-        path = prefix + ".poliqarp.corpus.image"
-
-        if not os.path.isfile(path):
-            raise IOError('File %s does not exist.' % path)
-
         # wczytaj słowniki pomocnicze
         self.orth_dict = ReadPoliqarpSimpleDict(prefix, "orth") 
         self.baseform_dict = PoliqarpBaseFormDict(
@@ -104,13 +100,8 @@ class PoliqarpCorpus(object):
                 ReadPoliqarpTagsDict(prefix, "tag"),
                 ReadPoliqarpSubposDict(prefix, "subpos1"))
 
-        size = os.stat(path)[stat.ST_SIZE]
-
-        with open(path) as f:
-            fd = f.fileno()
-            size = os.fstat(fd)[stat.ST_SIZE]
-            self.corpus_dict = mmap.mmap(fd, size, mmap.MAP_PRIVATE)
-            self.corpus_size = size >> 3
+        self.corpus_dict = ReadImageFile(prefix, 'corpus')
+        self.corpus_size = self.corpus_dict.size() >> 3
 
         # podsumowanie
         print "PoliqarpCorpus:", str(len(self)), "words in corpus."
