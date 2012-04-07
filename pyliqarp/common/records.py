@@ -25,8 +25,9 @@ class Word(namedtuple('Word', 'orth baseforms')):
     @field base: pierwotna forma bazowa
     @field tags: pierwotne otagowanie
 
-    @method pretty		- wydrukowanie z kolorkami
+    @method pretty: wydrukowanie z kolorkami
     """
+    __slots__ = ()
 
     @property
     def base(self):
