@@ -1,10 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.2
 # -*- coding: utf-8 -*-
 
 from array import array
 from collections import Sequence
 from functools import partial
-from itertools import izip
 
 import mmap
 import os
@@ -19,9 +18,9 @@ def ReadPoliqarpDict(parser, prefix, name):
     offsets = ReadOffsetFile(prefix, name)
 
     lengths = [struct.unpack('i', image[(i-4) : i])[0] for i in offsets]
-    records = [parser(image, i, n) for i, n in izip(offsets, lengths)]
+    records = [parser(image, i, n) for i, n in zip(offsets, lengths)]
 
-    print "%s '%s' contains %d records." % (parser.__name__, name, len(records))
+    print("%s '%s' contains %d records." % (parser.__name__, name, len(records)))
 
     return records
 
@@ -32,9 +31,9 @@ def ReadOffsetFile(prefix, name):
     if not os.path.isfile(path):
         raise IOError('File %s does not exist.' % path)
 
-    with open(path) as f:
+    with open(path, 'rb') as f:
         offsets = array('i')
-        offsets.fromstring(f.read())
+        offsets.frombytes(f.read())
 
     return offsets
 
@@ -55,12 +54,12 @@ def ReadImageFile(prefix, name):
 
 def PoliqarpSimpleDict(image, i, n):
     """Parses single record of simple dictionary."""
-    return image[i: (i+n-1)]
+    return image[i: (i+n-1)].decode()
 
 
 def PoliqarpTagsDict(image, i, n):
     """Parses single record of tags dictionary."""
-    return tuple(image[i: (i+n-1)].split(':'))
+    return tuple(image[i: (i+n-1)].decode().split(':'))
 
 
 def PoliqarpSubposDict(image, i, n):
@@ -68,7 +67,7 @@ def PoliqarpSubposDict(image, i, n):
     record = array('i', struct.unpack("H" * (n >> 1), image[i: (i+n)]))
 
     return [(record[i], record[i+1] >> 4)
-            for i in xrange(0, len(record), 2)]
+            for i in range(0, len(record), 2)]
 
 
 ReadPoliqarpSimpleDict = partial(ReadPoliqarpDict, PoliqarpSimpleDict)
@@ -80,7 +79,7 @@ def PoliqarpBaseFormDict(base_dict, tag_dict, subpos_dict):
     def UnfoldRecord(subpos):
         return [Tagging(base_dict[i1], tag_dict[i2]) for i1, i2 in subpos]
 
-    return map(UnfoldRecord, subpos_dict)
+    return list(map(UnfoldRecord, subpos_dict))
 
 
 class PoliqarpCorpus(Sequence):
@@ -103,7 +102,7 @@ class PoliqarpCorpus(Sequence):
 
         self.corpus_dict = ReadImageFile(prefix, 'corpus')
 
-        print "PoliqarpCorpus: %s words in corpus." % len(self)
+        print("PoliqarpCorpus: %s words in corpus." % len(self))
 
     def __len__(self):
         return self.corpus_dict.size() >> 3
@@ -117,7 +116,7 @@ class PoliqarpCorpus(Sequence):
         return self.__get_item_at(key)
 
     def __iter__(self):
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             yield self.__get_item_at(i)
 
     def __get_item_at(self, key):

@@ -1,16 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.2
 # -*- coding: utf-8 -*-
 
 from pyliqarp.client.disk import PoliqarpCorpus
 
 
 def PoliqarpCorpusTest():
-    """ Przykładowe użycie klasy PoliqarpCorpus. """
-    corpus = PoliqarpCorpus("frek/frek")
+  """ Przykładowe użycie klasy PoliqarpCorpus. """
+  corpus = PoliqarpCorpus("frek/frek")
 
-    for word in corpus:
-        if word.base == 'bogaty':
-            print word.pretty()
+  for word in corpus:
+    if word.base == 'bogaty':
+      print(word.pretty())
 
 
 if __name__ == "__main__":
