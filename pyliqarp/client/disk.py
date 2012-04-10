@@ -4,6 +4,7 @@
 from array import array
 from collections import Sequence
 from functools import partial
+from math import ceil
 
 import mmap
 import os
@@ -95,10 +96,16 @@ class PoliqarpCorpus(Sequence):
         """
         # wczytaj słowniki pomocnicze
         self.orth_dict = ReadPoliqarpSimpleDict(prefix, "orth") 
+
+        try:
+          subpos = ReadPoliqarpSubposDict(prefix, "subpos1")
+        except IOError:
+          subpos = ReadPoliqarpSubposDict(prefix, "interp1")
+
         self.baseform_dict = PoliqarpBaseFormDict(
                 ReadPoliqarpSimpleDict(prefix, "base1"),
                 ReadPoliqarpTagsDict(prefix, "tag"),
-                ReadPoliqarpSubposDict(prefix, "subpos1"))
+                subpos)
 
         self.corpus_dict = ReadImageFile(prefix, 'corpus')
 
