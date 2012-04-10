@@ -53,6 +53,21 @@ def ReadImageFile(prefix, name):
     return image
 
 
+def ReadImageFileAsArray(prefix, name, typecode):
+    path = '{0}.poliqarp.{1}.image'.format(prefix, name)
+
+    if not os.path.isfile(path):
+        raise IOError('File %s does not exist.' % path)
+
+    with open(path, 'rb') as f:
+        fd = f.fileno()
+        size = os.fstat(fd)[stat.ST_SIZE]
+        image = array(typecode)
+        image.fromfile(f, int(size / image.itemsize))
+
+    return image
+
+
 def PoliqarpSimpleDict(image, i, n):
     """Parses single record of simple dictionary."""
     return image[i: (i+n-1)].decode()
@@ -107,12 +122,12 @@ class PoliqarpCorpus(Sequence):
                 ReadPoliqarpTagsDict(prefix, "tag"),
                 subpos)
 
-        self.corpus_dict = ReadImageFile(prefix, 'corpus')
+        self.corpus_dict = ReadImageFileAsArray(prefix, 'corpus', 'Q')
 
         print("PoliqarpCorpus: %s words in corpus." % len(self))
 
     def __len__(self):
-        return self.corpus_dict.size() >> 3
+        return len(self.corpus_dict)
 
     def __getitem__(self, i):
         if type(key) is not IntType:
@@ -127,8 +142,7 @@ class PoliqarpCorpus(Sequence):
             yield self.__get_item_at(i)
 
     def __get_item_at(self, key):
-        i = key << 3
-        n = struct.unpack('q', self.corpus_dict[i:(i+8)])[0]
+        n = self.corpus_dict[key]
 
         # 21 bitowe indeksy
         ai = int((n >> 1) & 0x1FFFFF)
