@@ -1,0 +1,4 @@
+Requires:
+ - Python3.3
+ - Corpus directory (http://korpus.pl)
+ - Lots of physical memory (approx. 2.5x size of corpus)
