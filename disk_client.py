@@ -8,9 +8,11 @@ def PoliqarpCorpusTest():
   """ Przykładowe użycie klasy PoliqarpCorpus. """
   corpus = PoliqarpCorpus("corpus/sample/sample")
 
-  for word in corpus:
+  for n, word in enumerate(corpus):
     if word.base == 'bogaty':
-      print(word.pretty())
+      segments = map(str,
+          [corpus[n-2], corpus[n-1], word.pretty(), corpus[n+1], corpus[n+2]])
+      print('{0}: "{1}"'.format(n, ' '.join(segments)))
 
 
 if __name__ == "__main__":
