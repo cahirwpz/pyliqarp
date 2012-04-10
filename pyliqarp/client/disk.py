@@ -6,6 +6,7 @@ from collections import Sequence
 from functools import partial
 from math import ceil
 
+import logging
 import mmap
 import os
 import stat
@@ -19,6 +20,8 @@ def ArrayFromFile(prefix, name, typecode):
 
   if not os.path.isfile(path):
     raise IOError('File %s does not exist.' % path)
+
+  logging.info('Reading file "%s"', path)
 
   with open(path, 'rb') as f:
     fd = f.fileno()
@@ -34,6 +37,8 @@ def ReadImageFile(prefix, name):
 
   if not os.path.isfile(path):
     raise IOError('File %s does not exist.' % path)
+
+  logging.info('Reading file "%s"', path)
 
   with open(path) as f:
     fd = f.fileno()
@@ -68,7 +73,8 @@ def ReadPoliqarpDict(parser, prefix, name):
   lengths = [struct.unpack('i', image[(i-4) : i])[0] for i in offsets]
   records = [parser(image, i, n) for i, n in zip(offsets, lengths)]
 
-  print("%s '%s' contains %d records." % (parser.__name__, name, len(records)))
+  logging.info("%s '%s' contains %d records.", parser.__name__, name,
+      len(records))
 
   return records
 
@@ -111,7 +117,7 @@ class PoliqarpCorpus(Sequence):
 
     self.corpus_dict = ArrayFromFile(prefix, 'corpus.image', 'Q')
 
-    print("PoliqarpCorpus: %s words in corpus." % len(self))
+    logging.info("PoliqarpCorpus: %s words in corpus.", len(self))
 
   def __len__(self):
     return len(self.corpus_dict)

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3.3
 # -*- coding: utf-8 -*-
 
+import logging
+
 from pyliqarp.client.disk import PoliqarpCorpus
 
 
@@ -16,4 +18,7 @@ def PoliqarpCorpusTest():
 
 
 if __name__ == "__main__":
-	PoliqarpCorpusTest()
+  logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+      datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
+
+  PoliqarpCorpusTest()
