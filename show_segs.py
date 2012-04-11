@@ -12,7 +12,7 @@ from pyliqarp.corpus import PoliqarpCorpus
 
 def ParseArguments():
   parser = argparse.ArgumentParser(
-      description='Find all occurences of a segment with given base form.')
+      description='Print out selected range of segments from a corpus.')
   parser.add_argument('--corpus', type=str, default='./corpus/sample',
       help='path to directory containing Poliqarp corpus')
   parser.add_argument('--first', type=int, default=0,
