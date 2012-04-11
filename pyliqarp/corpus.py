@@ -10,7 +10,6 @@ import glob
 import logging
 import mmap
 import os
-import stat
 import struct
 
 from pyliqarp.utils import LogTiming
@@ -25,7 +24,7 @@ def _MapFile(path):
 
   with open(path) as f:
     fd = f.fileno()
-    size = os.fstat(fd)[stat.ST_SIZE]
+    size = os.fstat(fd).st_size
     data = mmap.mmap(fd, size, mmap.MAP_PRIVATE)
 
   return data 
@@ -99,6 +98,7 @@ class PoliqarpCorpus(Sequence):
     @param prefix: prefiks wszystkich plików korpusu.
     """
     self._prefix = prefix
+    self._segments = int(os.stat(self._DictPath('corpus.image')).st_size / 8)
 
   def _DictPath(self, name):
     return '{0}.poliqarp.{1}'.format(self._prefix, name)
@@ -121,7 +121,7 @@ class PoliqarpCorpus(Sequence):
   @LogTiming('Loading corpus segments')
   def LoadSegments(self):
     """Wczytaj segmenty."""
-    self._segments = _ArrayFromFile(self._DictPath('corpus.image'), 'Q')
+    self._segment_array = _ArrayFromFile(self._DictPath('corpus.image'), 'Q')
 
     logging.info('Loaded %d segments from the corpus.', len(self))
 
@@ -132,12 +132,7 @@ class PoliqarpCorpus(Sequence):
     end = list(start[1:]) + [n]
     return [range(first, last) for first, last in zip(start, end)]
 
-  def __len__(self):
-    return len(self._segments)
-
-  def __getitem__(self, i):
-    n = self._segments[i]
-
+  def _CreateSegment(self, i, n):
     # 21 bitowe indeksy
     ai = int((n >> 1) & 0x1FFFFF)
     bi = int((n >> 22) & 0x1FFFFF)
@@ -145,6 +140,12 @@ class PoliqarpCorpus(Sequence):
 
     return Segment(i, self._orth[ai], self._baseform[bi])
 
+  def __len__(self):
+    return self._segments
+
+  def __getitem__(self, i):
+    return self._CreateSegment(i, self._segment_array[i])
+
   def __iter__(self):
-    for i in range(len(self)):
-      yield self[i]
+    for i, n in enumerate(self._segment_array):
+      yield self._CreateSegment(i, n)
