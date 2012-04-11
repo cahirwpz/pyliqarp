@@ -75,7 +75,7 @@ def PoliqarpBaseFormDict(base_dict, tag_dict, subpos_dict):
   return list(map(UnfoldRecord, subpos_dict))
 
 
-class PoliqarpCorpus(Sequence):
+class Corpus(Sequence):
   """Właściwa klasa implementująca słownik korpusu.
 
   Służy do odczytywania zawartości korpusu Poliqarp.  Implementuje interator

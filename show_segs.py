@@ -3,11 +3,10 @@
 
 import argparse
 import logging
+import os
 import sys
 
-from os import path
-
-from pyliqarp.corpus import PoliqarpCorpus
+from pyliqarp.corpus import Corpus
 
 
 def ParseArguments():
@@ -22,7 +21,7 @@ def ParseArguments():
 
   args = parser.parse_args()
 
-  if not path.isdir(args.corpus):
+  if not os.path.isdir(args.corpus):
     raise SystemExit('Directory "%s" does not exist!' % args.corpus)
 
   return args
@@ -36,7 +35,7 @@ if __name__ == "__main__":
     raise SystemExit('Python 3.3 is required.')
 
   args = ParseArguments()
-  corpus = PoliqarpCorpus.FromPath(args.corpus)
+  corpus = Corpus.FromPath(args.corpus)
 
   args.count = args.count or len(corpus)
 
