@@ -3,20 +3,16 @@
 
 import logging
 import multiprocessing
-import pickle
 import sys
-
-from collections import namedtuple
 
 from find_segs import *
 
-WorkerArgs = namedtuple('WorkerArgs', 'baseform first last')
 
-
-def Worker(args):
+def Worker(indexRange):
   global corpus
+  global baseform
 
-  FindSegments(SegmentRange(corpus, args.first, args.last), args.baseform)
+  FindSegments(SegmentRange(corpus, indexRange.start, indexRange.stop), baseform)
 
 
 if __name__ == "__main__":
@@ -27,10 +23,11 @@ if __name__ == "__main__":
     raise SystemExit('Python 3.3 is required.')
 
   global corpus
+  global baseform
 
   args = ParseArguments()
   corpus = Corpus.FromPath(args.corpus)
+  baseform = args.baseform
 
   pool = multiprocessing.Pool()
-  pool.map(Worker, [WorkerArgs(args.baseform, r.start, r.stop)
-                    for r in corpus.Split(multiprocessing.cpu_count())])
+  pool.map(Worker, corpus.Split(multiprocessing.cpu_count()))
