@@ -18,9 +18,7 @@ from pyliqarp.utils import LogTiming
 from pyliqarp.records import Segment, Tagging
 
 
-def _MapFile(prefix, name):
-  path = '{0}.poliqarp.{1}'.format(prefix, name)
-
+def _MapFile(path):
   if not os.path.isfile(path):
     raise IOError('File %s does not exist.' % path)
 
@@ -33,8 +31,8 @@ def _MapFile(prefix, name):
 
   return data 
 
-def _ArrayFromFile(prefix, name, typecode):
-  mapped = _MapFile(prefix, name)
+def _ArrayFromFile(path, typecode):
+  mapped = _MapFile(path)
 
   data = array(typecode)
   data.frombytes(mapped)
@@ -54,20 +52,20 @@ def PoliqarpTagsDict(image, i, n):
 
 def PoliqarpSubposDict(image, i, n):
   """Parses single record of subpos dictionary."""
-  record = array('i', struct.unpack("H" * (n >> 1), image[i: (i+n)]))
+  record = array('i', struct.unpack('H' * (n >> 1), image[i: (i+n)]))
 
   return [(record[i], record[i+1] >> 4)
       for i in range(0, len(record), 2)]
 
 
-def ReadPoliqarpDict(parser, prefix, name):
-  image = _MapFile(prefix, name + '.image')
-  offsets = _ArrayFromFile(prefix, name + '.offset', 'i')
+def ReadPoliqarpDict(parser, path):
+  image = _MapFile(path + '.image')
+  offsets = _ArrayFromFile(path + '.offset', 'i')
 
   lengths = [struct.unpack('i', image[(i-4) : i])[0] for i in offsets]
   records = [parser(image, i, n) for i, n in zip(offsets, lengths)]
 
-  logging.info("%s '%s' contains %d records.", parser.__name__, name,
+  logging.info('Dictionary "%s" contains %d records.', os.path.basename(path),
       len(records))
 
   return records
@@ -97,44 +95,55 @@ class PoliqarpCorpus(Sequence):
     """Znajduje wspólny prefiks wszystkich plików korpusu."""
     corpus_files = glob.glob(path.join(corpus_path, '*'))
     prefix = path.commonprefix(corpus_files).rstrip('.')
-    corpus = cls()
-    corpus.Load(prefix)
+    corpus = cls(prefix)
+    corpus.LoadData()
+    corpus.LoadSegments()
     return corpus
 
-  @LogTiming('Loading corpus')
-  def Load(self, prefix):
-    """Wczytaj korpus wraz ze słownikami pomocniczymi.
+  def __init__(self, prefix):
+    """Konstruktor.
 
     @param prefix: prefiks wszystkich plików korpusu.
     """
-    self.orth_dict = ReadPoliqarpSimpleDict(prefix, "orth") 
+    self._prefix = prefix
+
+  def _DictPath(self, name):
+    return '{0}.poliqarp.{1}'.format(self._prefix, name)
+
+  @LogTiming('Loading auxiliary dictionaries')
+  def LoadData(self):
+    """Wczytaj słowniki pomocnicze."""
+    self._orth = ReadPoliqarpSimpleDict(self._DictPath('orth'))
 
     try:
-      subpos = ReadPoliqarpSubposDict(prefix, "subpos1")
+      interp = ReadPoliqarpSubposDict(self._DictPath('subpos1'))
     except IOError:
-      subpos = ReadPoliqarpSubposDict(prefix, "interp1")
+      interp = ReadPoliqarpSubposDict(self._DictPath('interp1'))
 
-    self.baseform_dict = PoliqarpBaseFormDict(
-        ReadPoliqarpSimpleDict(prefix, "base1"),
-        ReadPoliqarpTagsDict(prefix, "tag"),
-        subpos)
+    base = ReadPoliqarpSimpleDict(self._DictPath('base1'))
+    tag = ReadPoliqarpTagsDict(self._DictPath('tag'))
 
-    self.corpus_dict = _ArrayFromFile(prefix, 'corpus.image', 'Q')
+    self._baseform = PoliqarpBaseFormDict(base, tag, interp)
 
-    logging.info("PoliqarpCorpus: %s words in corpus.", len(self))
+  @LogTiming('Loading corpus segments')
+  def LoadSegments(self):
+    """Wczytaj segmenty."""
+    self._segments = _ArrayFromFile(self._DictPath('corpus.image'), 'Q')
+
+    logging.info('Loaded %d segments from the corpus.', len(self))
 
   def __len__(self):
-    return len(self.corpus_dict)
+    return len(self._segments)
 
   def __getitem__(self, i):
-    n = self.corpus_dict[i]
+    n = self._segments[i]
 
     # 21 bitowe indeksy
     ai = int((n >> 1) & 0x1FFFFF)
     bi = int((n >> 22) & 0x1FFFFF)
     # ci = int((n >> 43) & 0x1FFFFF)
 
-    return Segment(i, self.orth_dict[ai], self.baseform_dict[bi])
+    return Segment(i, self._orth[ai], self._baseform[bi])
 
   def __iter__(self):
     for i in range(len(self)):
