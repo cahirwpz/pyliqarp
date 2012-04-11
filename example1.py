@@ -10,10 +10,24 @@ from os import path
 from pyliqarp.corpus import PoliqarpCorpus
 
 
-def PoliqarpCorpusTest(path, baseform):
-  """ Przykładowe użycie klasy PoliqarpCorpus. """
-  corpus = PoliqarpCorpus.FromPath(path)
+def ParseArguments():
+  parser = argparse.ArgumentParser(
+      description='Find all occurences of a segment with given base form.')
+  parser.add_argument('--corpus', type=str, default='./corpus/sample',
+      help='path to directory containing Poliqarp corpus')
+  parser.add_argument('--baseform', type=str, default='bogaty',
+      help='base form of words to be looked for')
 
+  args = parser.parse_args()
+
+  if not path.isdir(args.corpus):
+    raise SystemExit('Directory "%s" does not exist!' % args.corpus)
+
+  return args
+
+
+def FindSegments(corpus, baseform):
+  """Searches through corpus for segments with given base form."""
   for segment in corpus:
     if segment.base == baseform:
       n = segment.position
@@ -29,16 +43,6 @@ if __name__ == "__main__":
   if (sys.version_info.major, sys.version_info.minor) < (3, 3):
     raise SystemExit('Python 3.3 is required.')
 
-  parser = argparse.ArgumentParser(
-      description='Find all occurences of a segment with given base form.')
-  parser.add_argument('--corpus', type=str, default='./corpus/sample',
-      help='path to directory containing Poliqarp corpus')
-  parser.add_argument('--baseform', type=str, default='bogaty',
-      help='base form of words to be looked for')
+  args = ParseArguments()
 
-  args = parser.parse_args()
-
-  if not path.isdir(args.corpus):
-    raise SystemExit('Directory "%s" does not exist!' % args.corpus)
-
-  PoliqarpCorpusTest(args.corpus, args.baseform)
+  FindSegments(PoliqarpCorpus.FromPath(args.corpus), args.baseform)
