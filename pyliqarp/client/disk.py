@@ -12,7 +12,7 @@ import os
 import stat
 import struct
 
-from pyliqarp.common.records import Word, Tagging
+from pyliqarp.common.records import Segment, Tagging
 
 
 def ArrayFromFile(prefix, name, typecode):
@@ -130,7 +130,7 @@ class PoliqarpCorpus(Sequence):
     bi = int((n >> 22) & 0x1FFFFF)
     # ci = int((n >> 43) & 0x1FFFFF)
 
-    return Word(self.orth_dict[ai], self.baseform_dict[bi])
+    return Segment(i, self.orth_dict[ai], self.baseform_dict[bi])
 
   def __iter__(self):
     for i in range(len(self)):

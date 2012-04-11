@@ -16,10 +16,12 @@ class Tagging(namedtuple('Tagging', 'base tags')):
     return "[\033[1;37m%s\033[0m|\033[1;33m%s\033[0m]" % (self.base, ':'.join(self.tags))
 
 
-class Word(namedtuple('Word', 'orth baseforms')):
-  """ Klasa przechowująca słowo wraz z jego wszystkimi niejednoznacznymi
-  otagowaniami.
+class Segment(namedtuple('Segment', 'position orth baseforms')):
+  """Klasa przechowująca segment.
+  
+  Segment to słowo wraz z jego wszystkimi otagowaniami.
 
+  @field position: indeks segmentu w korpusie
   @field orth: słowo
   @field baseforms: lista wszystkich możliwych otagowań
   @field base: pierwotna forma bazowa
