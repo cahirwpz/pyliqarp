@@ -12,7 +12,7 @@ import os
 import stat
 import struct
 
-from pyliqarp.common.records import Segment, Tagging
+from pyliqarp.records import Segment, Tagging
 
 
 def ArrayFromFile(prefix, name, typecode):

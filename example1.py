@@ -4,7 +4,7 @@
 import logging
 import sys
 
-from pyliqarp.client.disk import PoliqarpCorpus
+from pyliqarp.corpus import PoliqarpCorpus
 
 
 def PoliqarpCorpusTest():
