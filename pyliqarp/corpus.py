@@ -25,7 +25,7 @@ def _MapFile(path):
   with open(path) as f:
     fd = f.fileno()
     size = os.fstat(fd).st_size
-    data = mmap.mmap(fd, size, mmap.MAP_PRIVATE)
+    data = mmap.mmap(fd, size, access=mmap.ACCESS_READ)
 
   return data 
 
