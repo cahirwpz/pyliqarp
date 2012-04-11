@@ -14,6 +14,7 @@ import os
 import stat
 import struct
 
+from pyliqarp.utils import LogTiming
 from pyliqarp.records import Segment, Tagging
 
 
@@ -96,14 +97,16 @@ class PoliqarpCorpus(Sequence):
     """Znajduje wspólny prefiks wszystkich plików korpusu."""
     corpus_files = glob.glob(path.join(corpus_path, '*'))
     prefix = path.commonprefix(corpus_files).rstrip('.')
-    return cls(prefix)
+    corpus = cls()
+    corpus.Load(prefix)
+    return corpus
 
-  def __init__(self, prefix):
-    """Konstruktor klasy.
+  @LogTiming('Loading corpus')
+  def Load(self, prefix):
+    """Wczytaj korpus wraz ze słownikami pomocniczymi.
 
     @param prefix: prefiks wszystkich plików korpusu.
     """
-    # wczytaj słowniki pomocnicze
     self.orth_dict = ReadPoliqarpSimpleDict(prefix, "orth") 
 
     try:
