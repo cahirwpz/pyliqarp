@@ -1,4 +1,36 @@
-Requires:
+What is Pyliqarp?
+-----------------
+
+Pyliqarp is Python's package and a set of tools for dealing with Poliqarp
+corpuses.  Each Poliqarp corpus stores tens or hundreds text in Polish language
+and provides information, that can be used to analyze Polish texts.  To read
+about intricacies of polish language and how they relate to design of Poliqarp
+corpuses, please read materials on following page: 
+
+  http://nlp.ipipan.waw.pl/~adamp/Papers/2004-corpus/
+
+What information is available?
+------------------------------
+
+Mostly tagged segments. They look as follows:
+
+Czy [czy|qub] jest [być|fin:sg:ter:imperf] aż [aż|qub] tak [tak|qub]
+źle [źle|adv:pos] w [w|prep:loc:nwok] Krakowie [kraków|subst:sg:loc:m3]
+
+Pyliqarp tools
+--------------
+
+Pyliqarp offers following tools:
+ - find_segs.py: finds all occurences of a segment with given base form
+ - parallel_find_segs.py: as above, in parallel using all available cores
+ - show_segs.py: prints out selected range of segments from a corpus
+
+These tools are also an example of how to use API to write your own programs,
+that access Poliqarp corpuses.
+
+Requirements
+------------
+
  - Python3.3
- - Corpus directory (http://korpus.pl)
- - Lots of physical memory (approx. 2.5x size of corpus)
+ - Corpus directory (can be downloaded from http://korpus.pl)
+ - Lots of physical memory (~1.5x-2.5x size of corpus)
