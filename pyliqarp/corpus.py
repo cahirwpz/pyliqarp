@@ -23,18 +23,11 @@ def _MapFile(path):
   logging.debug('Reading file "%s"', path)
 
   with open(path) as f:
-    fd = f.fileno()
-    size = os.fstat(fd).st_size
-    data = mmap.mmap(fd, size, access=mmap.ACCESS_READ)
-
-  return data 
+    return mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
 
 def _ArrayFromFile(path, typecode):
-  mapped = _MapFile(path)
-
   data = array(typecode)
-  data.frombytes(mapped)
-
+  data.frombytes(_MapFile(path))
   return data 
 
 
