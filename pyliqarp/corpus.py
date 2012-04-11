@@ -20,7 +20,7 @@ def _MapFile(path):
   if not os.path.isfile(path):
     raise IOError('File %s does not exist.' % path)
 
-  logging.info('Reading file "%s"', path)
+  logging.debug('Reading file "%s"', path)
 
   with open(path) as f:
     fd = f.fileno()
@@ -78,8 +78,9 @@ def PoliqarpBaseFormDict(base_dict, tag_dict, subpos_dict):
 class Corpus(Sequence):
   """Właściwa klasa implementująca słownik korpusu.
 
-  Służy do odczytywania zawartości korpusu Poliqarp.  Implementuje interator
-  oraz operator indeksowania.
+  Służy do odczytywania i przechowywania zawartości korpusu Poliqarp.
+  
+  Zachowuje się jak lista.  Nadaje się do losowych odczytów.
   """
 
   @classmethod
@@ -89,7 +90,6 @@ class Corpus(Sequence):
     prefix = os.path.commonprefix(files).rstrip('.')
     corpus = cls(prefix)
     corpus.LoadData()
-    corpus.LoadSegments()
     return corpus
 
   def __init__(self, prefix):
@@ -98,7 +98,9 @@ class Corpus(Sequence):
     @param prefix: prefiks wszystkich plików korpusu.
     """
     self._prefix = prefix
-    self._segments = int(os.stat(self._DictPath('corpus.image')).st_size / 8)
+    self._segments = _MapFile(self._DictPath('corpus.image'))
+
+    logging.info('Corpus "%s" contains %d segments.', os.path.dirname(prefix), len(self))
 
   def _DictPath(self, name):
     return '{0}.poliqarp.{1}'.format(self._prefix, name)
@@ -118,13 +120,6 @@ class Corpus(Sequence):
 
     self._baseform = PoliqarpBaseFormDict(base, tag, interp)
 
-  @LogTiming('Loading corpus segments')
-  def LoadSegments(self):
-    """Wczytaj segmenty."""
-    self._segment_array = _ArrayFromFile(self._DictPath('corpus.image'), 'Q')
-
-    logging.info('Loaded %d segments from the corpus.', len(self))
-
   def Split(self, k):
     """Split the corpus into k equally sized ranges."""
     n = len(self)
@@ -138,14 +133,54 @@ class Corpus(Sequence):
     bi = int((n >> 22) & 0x1FFFFF)
     # ci = int((n >> 43) & 0x1FFFFF)
 
-    return Segment(i, self._orth[ai], self._baseform[bi])
+    try:
+      return Segment(i, self._orth[ai], self._baseform[bi])
+    except:
+      print(i, ai, bi)
+      raise
 
   def __len__(self):
-    return self._segments
+    return int(self._segments.size() / 8)
 
   def __getitem__(self, i):
-    return self._CreateSegment(i, self._segment_array[i])
+    j = i * 8
+    n = struct.unpack('q', self._segments[j:j+8])[0]
+    return self._CreateSegment(i, n)
 
   def __iter__(self):
-    for i, n in enumerate(self._segment_array):
-      yield self._CreateSegment(i, n)
+    for i in range(len(self)):
+      yield self[i]
+
+
+class SegmentRange(Sequence):
+  """Klasa służąca do efektywnego przeglądania fragmentu korpusu."""
+
+  def __init__(self, corpus, first=None, last=None):
+    self._corpus = corpus
+    self._first = first or 0
+    self._last = last or len(corpus)
+    self._range = None
+
+    indexRange = range(len(corpus))
+
+    if ((self._first not in indexRange) or (self._last not in indexRange) or
+        (self._first >= self._last)):
+      raise IndexError
+
+  @LogTiming('Loading segments from corpus')
+  def Load(self):
+    """Wczytaj segmenty."""
+    self._range = array('Q')
+    self._range.frombytes(self._corpus._segments[self._first*8:self._last*8])
+
+    logging.info('Loaded %d segments from the corpus.', len(self))
+
+  def __len__(self):
+    return len(self._range)
+
+  def __getitem__(self, i):
+    return self._corpus[i]
+
+  def __iter__(self):
+    for i, n in enumerate(self._range, start=self._first):
+      yield self._corpus._CreateSegment(i, n)

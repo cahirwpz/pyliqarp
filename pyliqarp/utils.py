@@ -11,11 +11,13 @@ def LogTiming(desc=None):
     def wrapper(*args, **kwargs):
         nonlocal desc
 
+        logging.debug('%s.', desc or func.__name__)
+
         start = time.time()
         result = func(*args, **kwargs)
         elapsed = time.time() - start
 
-        logging.debug('%s took %.3fs.' % (desc or func.__name__, elapsed))
+        logging.debug('%s took %.3fs.', desc or func.__name__, elapsed)
 
         return result
 

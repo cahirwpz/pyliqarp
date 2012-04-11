@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 
-from pyliqarp.corpus import Corpus
+from pyliqarp.corpus import Corpus, SegmentRange
 
 
 def ParseArguments():
@@ -43,5 +43,8 @@ if __name__ == "__main__":
     raise SystemExit('Python 3.3 is required.')
 
   args = ParseArguments()
+  corpus = Corpus.FromPath(args.corpus)
+  segments = SegmentRange(corpus)
+  segments.Load()
 
-  FindSegments(Corpus.FromPath(args.corpus), args.baseform)
+  FindSegments(segments, args.baseform)
