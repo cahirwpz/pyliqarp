@@ -6,6 +6,8 @@ import logging
 import os
 import sys
 
+from operator import attrgetter
+
 from pyliqarp.corpus import Corpus, SegmentRange
 
 
@@ -25,14 +27,17 @@ def ParseArguments():
   return args
 
 
+def PrintSegments(corpus, segments):
+  for segment in sorted(segments, key=attrgetter('position')):
+    n = segment.position
+    segments = map(str, [corpus[n-2], corpus[n-1], segment.pretty(),
+                         corpus[n+1], corpus[n+2]])
+    print('{0}: "{1}"'.format(n, ' '.join(segments)))
+
+
 def FindSegments(corpus, baseform):
   """Searches through corpus for segments with given base form."""
-  for segment in corpus:
-    if segment.base == baseform:
-      n = segment.position
-      segments = map(str, [corpus[n-2], corpus[n-1], segment.pretty(),
-                           corpus[n+1], corpus[n+2]])
-      print('{0}: "{1}"'.format(n, ' '.join(segments)))
+  return [segment for segment in corpus if segment.base == baseform]
 
 
 if __name__ == "__main__":
@@ -44,5 +49,5 @@ if __name__ == "__main__":
 
   args = ParseArguments()
   corpus = Corpus.FromPath(args.corpus)
-
-  FindSegments(SegmentRange(corpus), args.baseform)
+  segments = FindSegments(SegmentRange(corpus), args.baseform)
+  PrintSegments(segments)

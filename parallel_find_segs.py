@@ -5,6 +5,8 @@ import logging
 import multiprocessing
 import sys
 
+from itertools import chain
+
 from find_segs import *
 
 
@@ -12,7 +14,7 @@ def Worker(indexRange):
   global corpus
   global baseform
 
-  FindSegments(SegmentRange(corpus, indexRange.start, indexRange.stop), baseform)
+  return FindSegments(SegmentRange(corpus, indexRange.start, indexRange.stop), baseform)
 
 
 if __name__ == "__main__":
@@ -30,4 +32,5 @@ if __name__ == "__main__":
   baseform = args.baseform
 
   pool = multiprocessing.Pool()
-  pool.map(Worker, corpus.Split(multiprocessing.cpu_count()))
+  results = pool.map(Worker, corpus.Split(multiprocessing.cpu_count()))
+  PrintSegments(corpus, chain.from_iterable(results))
