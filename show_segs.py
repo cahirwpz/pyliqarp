@@ -17,7 +17,7 @@ def ParseArguments():
       help='path to directory containing Poliqarp corpus')
   parser.add_argument('--first', type=int, default=0,
       help='index of first segment to show (numbering starts from 0)')
-  parser.add_argument('--count', type=int, default=-1,
+  parser.add_argument('--count', type=int, default=0,
       help='number of segments to show (default: all)')
 
   args = parser.parse_args()
@@ -38,8 +38,7 @@ if __name__ == "__main__":
   args = ParseArguments()
   corpus = PoliqarpCorpus.FromPath(args.corpus)
 
-  if args.count == -1:
-    args.count = len(corpus)
+  args.count = args.count or len(corpus)
 
   last = args.count + args.first
 
