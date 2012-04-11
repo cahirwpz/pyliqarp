@@ -17,25 +17,8 @@ import struct
 from pyliqarp.records import Segment, Tagging
 
 
-def ArrayFromFile(prefix, name, typecode):
+def _MapFile(prefix, name):
   path = '{0}.poliqarp.{1}'.format(prefix, name)
-
-  if not os.path.isfile(path):
-    raise IOError('File %s does not exist.' % path)
-
-  logging.info('Reading file "%s"', path)
-
-  with open(path, 'rb') as f:
-    fd = f.fileno()
-    size = os.fstat(fd)[stat.ST_SIZE]
-    data = array(typecode)
-    data.fromfile(f, int(size / data.itemsize))
-
-  return data 
-
-
-def ReadImageFile(prefix, name):
-  path = '{0}.poliqarp.{1}.image'.format(prefix, name)
 
   if not os.path.isfile(path):
     raise IOError('File %s does not exist.' % path)
@@ -45,9 +28,17 @@ def ReadImageFile(prefix, name):
   with open(path) as f:
     fd = f.fileno()
     size = os.fstat(fd)[stat.ST_SIZE]
-    image = mmap.mmap(fd, size, mmap.MAP_PRIVATE)
+    data = mmap.mmap(fd, size, mmap.MAP_PRIVATE)
 
-  return image
+  return data 
+
+def _ArrayFromFile(prefix, name, typecode):
+  mapped = _MapFile(prefix, name)
+
+  data = array(typecode)
+  data.frombytes(mapped)
+
+  return data 
 
 
 def PoliqarpSimpleDict(image, i, n):
@@ -69,8 +60,8 @@ def PoliqarpSubposDict(image, i, n):
 
 
 def ReadPoliqarpDict(parser, prefix, name):
-  image = ReadImageFile(prefix, name)
-  offsets = ArrayFromFile(prefix, '{0}.offset'.format(name), 'i')
+  image = _MapFile(prefix, name + '.image')
+  offsets = _ArrayFromFile(prefix, name + '.offset', 'i')
 
   lengths = [struct.unpack('i', image[(i-4) : i])[0] for i in offsets]
   records = [parser(image, i, n) for i, n in zip(offsets, lengths)]
@@ -125,7 +116,7 @@ class PoliqarpCorpus(Sequence):
         ReadPoliqarpTagsDict(prefix, "tag"),
         subpos)
 
-    self.corpus_dict = ArrayFromFile(prefix, 'corpus.image', 'Q')
+    self.corpus_dict = _ArrayFromFile(prefix, 'corpus.image', 'Q')
 
     logging.info("PoliqarpCorpus: %s words in corpus.", len(self))
 
