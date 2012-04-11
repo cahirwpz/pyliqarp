@@ -1,7 +1,8 @@
-#!/usr/bin/env python3.3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import logging
+import sys
 
 from pyliqarp.client.disk import PoliqarpCorpus
 
@@ -20,5 +21,8 @@ def PoliqarpCorpusTest():
 if __name__ == "__main__":
   logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
       datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
+
+  if (sys.version_info.major, sys.version_info.minor) < (3, 3):
+    raise SystemExit('Python 3.3 is required.')
 
   PoliqarpCorpusTest()
