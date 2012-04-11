@@ -5,7 +5,6 @@ from array import array
 from collections import Sequence
 from functools import partial
 from math import ceil
-from os import path
 
 import glob
 import logging
@@ -45,14 +44,9 @@ def PoliqarpSimpleDict(image, i, n):
   return image[i: (i+n-1)].decode()
 
 
-def PoliqarpTagsDict(image, i, n):
-  """Parses single record of tags dictionary."""
-  return tuple(image[i: (i+n-1)].decode().split(':'))
-
-
 def PoliqarpSubposDict(image, i, n):
   """Parses single record of subpos dictionary."""
-  record = array('i', struct.unpack('H' * (n >> 1), image[i: (i+n)]))
+  record = struct.unpack('H' * (n >> 1), image[i: (i+n)])
 
   return [(record[i], record[i+1] >> 4)
       for i in range(0, len(record), 2)]
@@ -72,7 +66,6 @@ def ReadPoliqarpDict(parser, path):
 
 
 ReadPoliqarpSimpleDict = partial(ReadPoliqarpDict, PoliqarpSimpleDict)
-ReadPoliqarpTagsDict = partial(ReadPoliqarpDict, PoliqarpTagsDict)
 ReadPoliqarpSubposDict = partial(ReadPoliqarpDict, PoliqarpSubposDict)
 
 
@@ -93,8 +86,8 @@ class PoliqarpCorpus(Sequence):
   @classmethod
   def FromPath(cls, path):
     """Znajduje wspólny prefiks wszystkich plików korpusu."""
-    files = glob.glob(path.join(path, '*'))
-    prefix = path.commonprefix(files).rstrip('.')
+    files = glob.glob(os.path.join(path, '*'))
+    prefix = os.path.commonprefix(files).rstrip('.')
     corpus = cls(prefix)
     corpus.LoadData()
     corpus.LoadSegments()
@@ -121,7 +114,7 @@ class PoliqarpCorpus(Sequence):
       interp = ReadPoliqarpSubposDict(self._DictPath('interp1'))
 
     base = ReadPoliqarpSimpleDict(self._DictPath('base1'))
-    tag = ReadPoliqarpTagsDict(self._DictPath('tag'))
+    tag = ReadPoliqarpSimpleDict(self._DictPath('tag'))
 
     self._baseform = PoliqarpBaseFormDict(base, tag, interp)
 

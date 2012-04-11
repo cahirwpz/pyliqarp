@@ -13,7 +13,7 @@ class Tagging(namedtuple('Tagging', 'base tags')):
   __slots__ = ()
 
   def pretty(self):
-    return "[\033[1;37m%s\033[0m|\033[1;33m%s\033[0m]" % (self.base, ':'.join(self.tags))
+    return "[\033[1;37m%s\033[0m|\033[1;33m%s\033[0m]" % (self.base, self.tags)
 
 
 class Segment(namedtuple('Segment', 'position orth baseforms')):
