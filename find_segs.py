@@ -44,7 +44,5 @@ if __name__ == "__main__":
 
   args = ParseArguments()
   corpus = Corpus.FromPath(args.corpus)
-  segments = SegmentRange(corpus)
-  segments.Load()
 
-  FindSegments(segments, args.baseform)
+  FindSegments(SegmentRange(corpus), args.baseform)

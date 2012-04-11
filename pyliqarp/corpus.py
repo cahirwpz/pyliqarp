@@ -161,14 +161,16 @@ class SegmentRange(Sequence):
     self._last = last or len(corpus)
     self._range = None
 
-    indexRange = range(len(corpus))
+    indexRange = range(len(corpus) + 1)
 
     if ((self._first not in indexRange) or (self._last not in indexRange) or
         (self._first >= self._last)):
       raise IndexError
 
+    self._Load()
+
   @LogTiming('Loading segments from corpus')
-  def Load(self):
+  def _Load(self):
     """Wczytaj segmenty."""
     self._range = array('Q')
     self._range.frombytes(self._corpus._segments[self._first*8:self._last*8])
