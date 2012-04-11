@@ -91,10 +91,10 @@ class PoliqarpCorpus(Sequence):
   """
 
   @classmethod
-  def FromPath(cls, corpus_path):
+  def FromPath(cls, path):
     """Znajduje wspólny prefiks wszystkich plików korpusu."""
-    corpus_files = glob.glob(path.join(corpus_path, '*'))
-    prefix = path.commonprefix(corpus_files).rstrip('.')
+    files = glob.glob(path.join(path, '*'))
+    prefix = path.commonprefix(files).rstrip('.')
     corpus = cls(prefix)
     corpus.LoadData()
     corpus.LoadSegments()
@@ -131,6 +131,13 @@ class PoliqarpCorpus(Sequence):
     self._segments = _ArrayFromFile(self._DictPath('corpus.image'), 'Q')
 
     logging.info('Loaded %d segments from the corpus.', len(self))
+
+  def Split(self, k):
+    """Split the corpus into k equally sized ranges."""
+    n = len(self)
+    start = range(0, n, ceil(n / k))
+    end = list(start[1:]) + [n]
+    return [range(first, last) for first, last in zip(start, end)]
 
   def __len__(self):
     return len(self._segments)
