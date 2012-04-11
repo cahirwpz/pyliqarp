@@ -45,10 +45,9 @@ def PoliqarpSimpleDict(image, i, n):
 
 def PoliqarpSubposDict(image, i, n):
   """Parses single record of subpos dictionary."""
-  record = struct.unpack('H' * (n >> 1), image[i: (i+n)])
+  record = struct.unpack('I' * (n >> 2), image[i: (i+n)])
 
-  return [(record[i], record[i+1] >> 4)
-      for i in range(0, len(record), 2)]
+  return [(n & 0xfffff, n >> 20) for n in record]
 
 
 def ReadPoliqarpDict(parser, path):
@@ -133,11 +132,7 @@ class Corpus(Sequence):
     bi = int((n >> 22) & 0x1FFFFF)
     # ci = int((n >> 43) & 0x1FFFFF)
 
-    try:
-      return Segment(i, self._orth[ai], self._baseform[bi])
-    except:
-      print(i, ai, bi)
-      raise
+    return Segment(i, self._orth[ai], self._baseform[bi])
 
   def __len__(self):
     return int(self._segments.size() / 8)
