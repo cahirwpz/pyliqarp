@@ -5,7 +5,9 @@ from array import array
 from collections import Sequence
 from functools import partial
 from math import ceil
+from os import path
 
+import glob
 import logging
 import mmap
 import os
@@ -92,15 +94,23 @@ def PoliqarpBaseFormDict(base_dict, tag_dict, subpos_dict):
 
 
 class PoliqarpCorpus(Sequence):
-  """ Właściwa klasa implementująca słownik korpusu.
+  """Właściwa klasa implementująca słownik korpusu.
 
-    Implementuje interator i operator indeksowania (można odczytywać
-    poszczególne słowa, jak z listy).
+  Służy do odczytywania zawartości korpusu Poliqarp.  Implementuje interator
+  oraz operator indeksowania.
   """
 
+  @classmethod
+  def FromPath(cls, corpus_path):
+    """Znajduje wspólny prefiks wszystkich plików korpusu."""
+    corpus_files = glob.glob(path.join(corpus_path, '*'))
+    prefix = path.commonprefix(corpus_files).rstrip('.')
+    return cls(prefix)
+
   def __init__(self, prefix):
-    """
-        @param prefix	- prefiks określający ścieżkę do słownika.
+    """Konstruktor klasy.
+
+    @param prefix: prefiks wszystkich plików korpusu.
     """
     # wczytaj słowniki pomocnicze
     self.orth_dict = ReadPoliqarpSimpleDict(prefix, "orth") 
