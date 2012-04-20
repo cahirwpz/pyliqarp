@@ -24,7 +24,7 @@ class Segment(namedtuple('Segment', 'position separated orth baseforms')):
   @field position: indeks segmentu w korpusie
   @field separated: oddzielone spacją od poprzedniego segmentu?
   @field orth: słowo
-  @field baseforms: lista wszystkich możliwych otagowań
+  @field baseforms: lista ujednoznacznionych otagowań słowa 
   @field base: pierwotna forma bazowa
   @field tags: pierwotne otagowanie
 
