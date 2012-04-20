@@ -120,12 +120,14 @@ class Corpus(Sequence):
     return [range(first, last) for first, last in zip(start, end)]
 
   def _CreateSegment(self, i, n):
+    separated = bool(n & 1)
+
     # 21 bitowe indeksy
     ai = int((n >> 1) & 0x1FFFFF)
     bi = int((n >> 22) & 0x1FFFFF)
     # ci = int((n >> 43) & 0x1FFFFF)
 
-    return Segment(i, self._orth[ai], self._baseform[bi])
+    return Segment(i, separated, self._orth[ai], self._baseform[bi])
 
   def __len__(self):
     return int(self._segments.size() / 8)
