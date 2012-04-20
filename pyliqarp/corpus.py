@@ -97,20 +97,27 @@ class Corpus(Sequence):
   def _DictPath(self, name):
     return '{0}.poliqarp.{1}'.format(self._prefix, name)
 
+  def _LoadTaggingData(self, tags, num):
+    base = ReadPoliqarpSimpleDict(self._DictPath('base%d' % num))
+
+    try:
+      interp = ReadPoliqarpSubposDict(self._DictPath('subpos%d' % num))
+    except IOError:
+      interp = ReadPoliqarpSubposDict(self._DictPath('interp%d' % num))
+
+    return PoliqarpBaseFormDict(base, tags, interp)
+
   @LogTiming('Loading auxiliary dictionaries')
   def LoadData(self):
     """Wczytaj słowniki pomocnicze."""
     self._orth = ReadPoliqarpSimpleDict(self._DictPath('orth'))
 
-    try:
-      interp = ReadPoliqarpSubposDict(self._DictPath('subpos1'))
-    except IOError:
-      interp = ReadPoliqarpSubposDict(self._DictPath('interp1'))
+    tags = ReadPoliqarpSimpleDict(self._DictPath('tag'))
 
-    base = ReadPoliqarpSimpleDict(self._DictPath('base1'))
-    tag = ReadPoliqarpSimpleDict(self._DictPath('tag'))
+    self._disamb = self._LoadTaggingData(tags, 1)
 
-    self._baseform = PoliqarpBaseFormDict(base, tag, interp)
+    # Otagowania przed ujednoznacznieniem
+    # self._amb = self._LoadTaggingData(tags, 2)
 
   def Split(self, k):
     """Split the corpus into k equally sized ranges."""
@@ -124,10 +131,14 @@ class Corpus(Sequence):
 
     # 21 bitowe indeksy
     ai = int((n >> 1) & 0x1FFFFF)
+
+    # Indeks do ujednoznacznionej listy otagowań
     bi = int((n >> 22) & 0x1FFFFF)
+
+    # Indeks do listy pierwotnych otagowań
     # ci = int((n >> 43) & 0x1FFFFF)
 
-    return Segment(i, separated, self._orth[ai], self._baseform[bi])
+    return Segment(i, separated, self._orth[ai], self._disamb[bi])
 
   def __len__(self):
     return int(self._segments.size() / 8)
